@@ -20,15 +20,13 @@ Antibody Analysis Workflow
 
 	to obtain accessible surface area of antibody, antigen, and antibody-antigen complex.
 
-	*Currently using naccess via biowulf*
-
 3. Parse naccess output
 
 	Run all three python scripts in the naccess folder. For class ID, only calculate_epitope_residues.py is necessary. The 2 paratope pythons will be for identifying conserved ab-antigen interactions for sub-epitope classes.
 
 	*  Calculate the epitope residues
 		
-			calculate_epitope_residues_v1.py
+			calculate_epitope_residues.py
 	
 		Output: `filename_epitope_none_zero_bsa.out`
 
