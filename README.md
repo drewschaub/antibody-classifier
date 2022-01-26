@@ -26,7 +26,7 @@ Antibody Analysis Workflow
 
 	*  Calculate the epitope residues
 		
-			calculate_epitope_residues_v1.py
+			calculate_epitope_residues.py
 	
 		Output: `filename_epitope_none_zero_bsa.out`
 
