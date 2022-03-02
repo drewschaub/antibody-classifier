@@ -1,6 +1,10 @@
 Antibody Analysis Workflow
 ===================================
 
+1. Download ```naccess``` from: http://www.bioinf.manchester.ac.uk/naccess/. Add ```naccess``` to your ```$PATH```
+
+
+
 ## Step 1 - Run naccess and analyze output
 1. Prepare PDBs
 	Suggestions:
