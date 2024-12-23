@@ -1,7 +1,7 @@
 import numpy as np
 from pymol import cmd
 from .residue_ops import switch_atom_name
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import scipy.cluster.hierarchy as sch
 from pathlib import Path
 import json
@@ -152,7 +152,7 @@ def compute_rmsd_matrix(data_dir, structure_list, chain_mode='HL', epitope_selec
             old_j = old_structure_list.index(structure_list[j])
             return (i, j, old_rmsd_matrix[old_i, old_j])
 
-    with ProcessPoolExecutor() as executor:
+    with ThreadPoolExecutor() as executor:
         futures = [executor.submit(compute_pairwise_rmsd, i, j) for i in range(n) for j in range(i+1, n)]
         for future in as_completed(futures):
             i, j, rmsd = future.result()
