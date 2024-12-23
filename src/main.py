@@ -24,7 +24,7 @@ def main():
     pdb_files = list(data_dir.glob("*.pdb.gz")) + list(data_dir.glob("*.pdb"))
     # sort pdb files by name
     pdb_files.sort()
-    
+
     structure_names = []
     for pdb_file in pdb_files:
         obj_name = pdb_file.stem  # strip .pdb or .pdb.gz
@@ -43,23 +43,20 @@ def main():
     # we'll use a temporary epitope selection until i bring in the freesasa information
     epitope_selection = 'c. B and i. 512-519'
 
-    # compute the RMSD matrices for H chains
-    rmsd_matrix_H = compute_rmsd_matrix(data_dir, structure_names, chain_mode='H', epitope_selection=epitope_selection)
-    cmd.save("rmsd_matrix_H.pse")
+    for aligntype in ['H', 'L', 'HL']:
+        rmsd_matrix = compute_rmsd_matrix(data_dir, structure_names, chain_mode=aligntype, epitope_selection=epitope_selection)
+        
+        # save as a csv where row names and column names are the structure names
+        rmsd_df = pd.DataFrame(rmsd_matrix, index=structure_names, columns=structure_names)
+        rmsd_df.to_csv(Path(data_dir, f"rmsd_matrix_{aligntype}.csv"))
 
-    # save as a csv where row names and column names are the structure names
-    rmsd_df_H = pd.DataFrame(rmsd_matrix_H, index=structure_names, columns=structure_names)
-    rmsd_df_H.to_csv(Path(data_dir, "rmsd_matrix_H.csv"))
+        # save metadata as json
+        metadata = {"row_labels": structure_names, "col_labels": structure_names}
+        with open(Path(data_dir, f"rmsd_matrix_{aligntype}.json"), "w") as f:
+            json.dump(metadata, f)
 
-    # save metadata as json
-    metadata = {"row_labels": structure_names, "col_labels": structure_names}
-    metadata_path = Path(data_dir, "rmsd_matrix_H.json")
-    with open(metadata_path, "w") as f:
-        json.dump(metadata, f)
-
-    # save numpy array
-    rmsd_matrix_H_path = Path(data_dir, "rmsd_matrix_H.npy")
-    np.save(rmsd_matrix_H_path, rmsd_matrix_H)
+        # save numpy array
+        np.save(Path(data_dir, f"rmsd_matrix_{aligntype}.npy"), rmsd_matrix_H)
 
 
 
