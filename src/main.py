@@ -31,6 +31,14 @@ def main():
         obj_name = pdb_file.stem  # strip .pdb or .pdb.gz
         load_structure(pdb_file, obj_name)
         structure_names.append(obj_name)
+
+    # remove c. A and i. 1-56+486-999
+    cmd.remove("c. A and i. 1-56+486-999")
+    cmd.remove("c. B and i. 626-999")
+    cmd.remove("c. C")
+    cmd.remove("c. D and i. 1-587+656-999")
+    cmd.remove("c. E")
+    cmd.remove("c. F and i. 1-600+650-999")
     
     # Create chain selections or do other manipulations
     for name in structure_names:
