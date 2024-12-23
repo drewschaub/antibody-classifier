@@ -145,6 +145,7 @@ def compute_rmsd_matrix(data_dir, structure_list, chain_mode='HL', epitope_selec
             intersection_dict = find_epitope_intersection(epitope_dict_i, epitope_dict_j)
             epitope_selection = f"({generate_epitope_selection(intersection_dict)})"
             # print(epitope_selection)
+            print(f"Computing RMSD between {structure_list[i]} and {structure_list[j]}")
             return (i, j, compute_rmsd_single(structure_list[i], structure_list[j], chain_type, epitope_selection))
         else:
             old_i = old_structure_list.index(structure_list[i])
