@@ -5,7 +5,7 @@ from pymol import cmd
 from .structure_io import init_pymol_headless, load_structure, create_chain_selection
 # from .data_prep import compress_pdb_files
 # from .alignment import align_structures, measure_rms_cur
-# from .analysis import compute_rmsd_matrix, hierarchical_clustering
+from .analysis import compute_rmsd_matrix, hierarchical_clustering
 # from .visualization import plot_rmsd_heatmap, plot_dendrogram
 
 def main():
@@ -33,6 +33,12 @@ def main():
     # save pse file
     cmd.save("output.pse")
     
+    # we'll use a temporary epitope selection until i bring in the freesasa information
+    epitope_selection = 'c. B and i. 512-519'
+
+    # compute the RMSD matrices for H, L and both chains
+    rmsd_matrix_H = compute_rmsd_matrix(structure_names, chain_mode='H', epitope_selection=epitope_selection)
+
     # Example RMSD matrix computation
     # (You'd need to adapt compute_rmsd_matrix to do the actual alignment calls)
     # rmsd_matrix = compute_rmsd_matrix(structure_names, chain_mode='H_noH')
