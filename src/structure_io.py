@@ -23,7 +23,6 @@ def load_structure(structure_path, object_name=None):
     
     try:
         cmd.load(structure_path.as_posix(), sanitized_name)
-        print(f"Loaded structure: {sanitized_name} from {structure_path}")
         return sanitized_name # Return santiized name for further use
     except Exception as e:
         print(f"Error loading {structure_path}: {e}")
@@ -50,7 +49,6 @@ def create_chain_selection(object_name, chain_id, sel_name=None, backbone_only=T
     
     try:
         cmd.select(sel_name, selection)
-        print(f"Selection {sel_name} created: {selection}")
         return sel_name
     except Exception as e:
         print(f"Error creating selection {sel_name}: {e}")

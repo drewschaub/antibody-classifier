@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import scipy.cluster.hierarchy as sch
 from pathlib import Path
 import json
+import random
 
 # Constants
 AMBIGUOUS_RESIDUES = ['HIS',
@@ -22,27 +23,38 @@ AMBIGUOUS_RESIDUES = ['HIS',
 def compute_rmsd_single(mob, targ, chain_type, epitope_selection):
     """Compute RMSD between two structures for a specific chain"""
 
-    rmsd = 9999.99
+    unique_mob_name = generate_unique_name(mob)
+    unique_targ_name = generate_unique_name(targ)
 
-    # align structures using antibody
+    cmd.create(unique_mob_name, mob)
+    cmd.create(unique_targ_name, targ)
+
+    # generate selection strings
+    chains = {'HL': 'chain H+L',
+              'H': 'chain H',
+              'L': 'chain L'}
+    
+    mob_selection = f"{unique_mob_name} and {chains[chain_type]} and backbone"
+    targ_selection = f"{unique_targ_name} and {chains[chain_type]} and backbone"
+
+    # align structures
     try:
-        print(f"align {mob}_{chain_type} and backbone, {targ}_{chain_type} and backbone")
-        cmd.align(f"{mob}_{chain_type} and backbone", f"{targ}_{chain_type} and backbone")
+        print(f"align {mob_selection}, {targ_selection}")
+        cmd.align(mob_selection, targ_selection)
     except:
         # output a PSE file to look at the error
         cmd.save(f"{mob}_{chain_type}_error.pse")
         # print(f"Error aligning {mob}_{chain_type} and {targ}_{chain_type}")
 
-    
-    # Create epitope selections
-    mob_epitope_sele = f"{mob} and {epitope_selection}"
-    targ_epitope_sele = f"{targ} and {epitope_selection}"
-    print(f"sele mobile, {mob_epitope_sele}")
-    print(f"sele target, {targ_epitope_sele}")
+    # Calculate RMSD
+    mob_epitope_sele = f"{unique_mob_name} and {epitope_selection}"
+    targ_epitope_sele = f"{unique_targ_name} and {epitope_selection}"
+    rmsd = cmd.rms_cur(mob_epitope_sele, targ_epitope_sele)
 
     # Create a copy of the mobile object
-    flipped_mob = f"{mob}_flipped"
-    cmd.create(flipped_mob, mob)
+    flipped_mob = generate_unique_name(f"{mob}_flipped")
+
+    cmd.create(flipped_mob, unique_mob_name)
     
     flips = {'ARG': [('NH1', 'NH2')],
              'HIS': [('ND1', 'CD2'), ('ND1', 'CD2')],
@@ -76,6 +88,9 @@ def compute_rmsd_single(mob, targ, chain_type, epitope_selection):
                     # switch back to original atom names
                     switch_atom_name(residue_selection, flip[1], flip[0])
    
+    # delete the flipped object
+    cmd.delete(flipped_mob)
+
     return rmsd
 
 def compute_rmsd_matrix(data_dir, structure_list, chain_mode='HL', epitope_selection='all'):
@@ -125,6 +140,13 @@ def compute_rmsd_matrix(data_dir, structure_list, chain_mode='HL', epitope_selec
             rmsd_matrix[j, i] = rmsd
             
     return rmsd_matrix
+
+def generate_unique_name(base_name):
+    while True:
+        random_int = random.randint(0, 10000)
+        unique_name = f"{base_name}_{str(random_int)}"
+        if unique_name not in cmd.get_names("objects"):
+            return unique_name
 
 def hierarchical_clustering(matrix, method='average'):
     """
