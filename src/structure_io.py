@@ -1,6 +1,17 @@
 import pymol
 from pymol import cmd
 from pathlib import Path
+import json
+
+def parse_epitope_dict(epitope_dict_str):
+    epitope_dict = json.loads(epitope_dict_str.replace("'", "\""))
+    selections = []
+    for chain, residues in epitope_dict.items():
+        resi_str = "+".join(map(str, residues))
+        selections.append(f"chain {chain} and resi {resi_str}")
+    return " + ".join(selections)
+
+# Other functions like init_pymol_headless, load_structure, create_chain_selection
 
 def init_pymol_headless():
     """

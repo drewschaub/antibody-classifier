@@ -22,6 +22,14 @@ To set up the environment, follow these steps:
 ## Usage
 
 ### Curating Datasets
-Store your pdb files in `pdb.gz` format in the `data` folder. You can separate projects. To match with the manuscript, this has folders for `hiv1`, `influenza`, and `sarscov2`. To gzip on MacOS, simply copy your `pdb` files to your folder and run:
+Store your pdb files in `pdb.gz` or `pdb` format in the `data` folder. You can separate projects. To match with the manuscript, this has folders for `hiv1`, `influenza`, and `sarscov2`. To gzip on MacOS, simply copy your `pdb` files to your folder and run:
 ```bash
 gzip *.pdb
+```
+
+### Defining the epitopes
+Define each epitope in the epitope.csv file which will be stored in your `data_dir`. The first column will be the name of the `pdb.gz` or `pdb` file. The second column wll be the epitope defined as a dictionary object:
+
+```
+{'B': [512,513,514,515,516,517,518,519]}
+```

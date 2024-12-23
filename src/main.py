@@ -11,6 +11,7 @@ from .structure_io import init_pymol_headless, load_structure, create_chain_sele
 from .analysis import compute_rmsd_matrix, hierarchical_clustering
 # from .visualization import plot_rmsd_heatmap, plot_dendrogram
 
+
 def main():
     parser = argparse.ArgumentParser(description="Antibody RMSD alignment pipeline.")
     parser.add_argument("--data-dir", default="data/hiv1",
@@ -39,21 +40,18 @@ def main():
     
     # save pse file
     cmd.save("output.pse")
-    
-    # we'll use a temporary epitope selection until i bring in the freesasa information
-    epitope_selection = 'c. B and i. 512-519'
 
     rmsd_matrices = []
+    metadata = {"row_labels": structure_names, "col_labels": structure_names}
     for aligntype in ['H', 'L', 'HL']:
         print(f"Computing RMSD matrix for {aligntype} chains")
-        rmsd_matrix = compute_rmsd_matrix(data_dir, structure_names, chain_mode=aligntype, epitope_selection=epitope_selection)
+        rmsd_matrix = compute_rmsd_matrix(data_dir, structure_names, chain_mode=aligntype)
         
         # save as a csv where row names and column names are the structure names
         rmsd_df = pd.DataFrame(rmsd_matrix, index=structure_names, columns=structure_names)
         rmsd_df.to_csv(Path(data_dir, f"rmsd_matrix_{aligntype}.csv"))
 
         # save metadata as json
-        metadata = {"row_labels": structure_names, "col_labels": structure_names}
         with open(Path(data_dir, f"rmsd_matrix_{aligntype}.json"), "w") as f:
             json.dump(metadata, f)
 
@@ -62,7 +60,13 @@ def main():
 
         rmsd_matrices.append(rmsd_matrix)
 
-
+    # generate minimum rmsd matrix
+    min_rmsd_matrix = np.minimum.reduce(rmsd_matrices)
+    min_rmsd_df = pd.DataFrame(min_rmsd_matrix, index=structure_names, columns=structure_names)
+    min_rmsd_df.to_csv(Path(data_dir, "min_rmsd_matrix.csv"))
+    np.save(Path(data_dir, "min_rmsd_matrix.npy"), min_rmsd_matrix)
+    with open(Path(data_dir, "min_rmsd_matrix.json"), "w") as f:
+        json.dump(metadata, f)
 
     # Example RMSD matrix computation
     # (You'd need to adapt compute_rmsd_matrix to do the actual alignment calls)

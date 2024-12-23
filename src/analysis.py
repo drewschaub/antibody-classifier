@@ -6,6 +6,7 @@ import scipy.cluster.hierarchy as sch
 from pathlib import Path
 import json
 import random
+import pandas as pd
 
 # Constants
 AMBIGUOUS_RESIDUES = ['HIS',
@@ -39,7 +40,7 @@ def compute_rmsd_single(mob, targ, chain_type, epitope_selection):
 
     # align structures
     try:
-        print(f"align {mob_selection}, {targ_selection}")
+        # print(f"align {mob_selection}, {targ_selection}")
         cmd.align(mob_selection, targ_selection)
     except:
         # output a PSE file to look at the error
@@ -49,6 +50,7 @@ def compute_rmsd_single(mob, targ, chain_type, epitope_selection):
     # Calculate RMSD
     mob_epitope_sele = f"{unique_mob_name} and {epitope_selection}"
     targ_epitope_sele = f"{unique_targ_name} and {epitope_selection}"
+    # print(mob_epitope_sele, targ_epitope_sele)
     rmsd = cmd.rms_cur(mob_epitope_sele, targ_epitope_sele)
 
     # Create a copy of the mobile object
@@ -83,13 +85,15 @@ def compute_rmsd_single(mob, targ, chain_type, epitope_selection):
                 # if the flipped rmsd is less than the original rmsd, keep the flipped residue
                 if flipped_rmsd < rmsd:
                     rmsd = flipped_rmsd
-                    print(rmsd)
+                    # print(rmsd)
                 else:
                     # switch back to original atom names
                     switch_atom_name(residue_selection, flip[1], flip[0])
    
-    # delete the flipped object
+    # delete the temporary objects
     cmd.delete(flipped_mob)
+    cmd.delete(unique_mob_name)
+    cmd.delete(unique_targ_name)
 
     return rmsd
 
@@ -102,6 +106,14 @@ def compute_rmsd_matrix(data_dir, structure_list, chain_mode='HL', epitope_selec
     rmsd_matrix = np.zeros((n, n))
     new_antibodies = structure_list
 
+    # read 'epitope_dict.csv' and convert to epitope selection string
+    epitope_dict_path = Path(data_dir, 'epitope_dict.csv')
+    epitope_dict = {}
+
+    if epitope_dict_path.exists():
+        epitope_df = pd.read_csv(epitope_dict_path)
+        epitope_dict = dict(zip(epitope_df['structure_stem'], epitope_df['epitope_dict']))
+            
     # check data_dir and see if 
     old_rmsd_matrix_np_path = Path(data_dir, f"rmsd_matrix_{chain_mode}.npy")
     old_rmsd_matrix_json_path = Path(data_dir, f"rmsd_matrix_{chain_mode}.json")
@@ -126,6 +138,13 @@ def compute_rmsd_matrix(data_dir, structure_list, chain_mode='HL', epitope_selec
     def compute_pairwise_rmsd(i, j):
         chain_type = chain_mode
         if structure_list[i] in new_antibodies or structure_list[j] in new_antibodies:
+            epitope_dict_i = parse_epitope_dict(epitope_dict.get(structure_list[i], '{}'))
+            epitope_dict_j = parse_epitope_dict(epitope_dict.get(structure_list[j], '{}'))
+            # print(epitope_dict_i)
+            # print(epitope_dict_j)
+            intersection_dict = find_epitope_intersection(epitope_dict_i, epitope_dict_j)
+            epitope_selection = f"({generate_epitope_selection(intersection_dict)})"
+            # print(epitope_selection)
             return (i, j, compute_rmsd_single(structure_list[i], structure_list[j], chain_type, epitope_selection))
         else:
             old_i = old_structure_list.index(structure_list[i])
@@ -155,3 +174,24 @@ def hierarchical_clustering(matrix, method='average'):
     """
     Y = sch.linkage(matrix, method=method)
     return Y
+
+def parse_epitope_dict(epitope_dict_str):
+    epitope_dict = json.loads(epitope_dict_str.replace("'", "\""))
+    return epitope_dict
+
+def find_epitope_intersection(epitope_dict_i, epitope_dict_j):
+    intersection_dict = {}
+    for chain in epitope_dict_i.keys() & epitope_dict_j.keys():
+        residues_i = set(epitope_dict_i[chain])
+        residues_j = set(epitope_dict_j[chain])
+        intersection_residues = residues_i & residues_j
+        if intersection_residues:
+            intersection_dict[chain] = list(intersection_residues)
+    return intersection_dict
+
+def generate_epitope_selection(epitope_dict):
+    selections = []
+    for chain, residues in epitope_dict.items():
+        resi_str = "+".join(map(str, residues))
+        selections.append(f"(chain {chain} and resi {resi_str})")
+    return "+".join(selections)
