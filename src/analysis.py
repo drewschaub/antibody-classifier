@@ -1,6 +1,7 @@
 import numpy as np
 from pymol import cmd
 from .residue_ops import switch_atom_name
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import scipy.cluster.hierarchy as sch
 from pathlib import Path
 import json
@@ -77,14 +78,13 @@ def compute_rmsd_single(mob, targ, chain_type, epitope_selection):
    
     return rmsd
 
-def compute_rmsd_matrix(data_dir, structure_list, chain_mode='both', epitope_selection='all'):
+def compute_rmsd_matrix(data_dir, structure_list, chain_mode='HL', epitope_selection='all'):
     """
     Compute RMSD matrix between structures.
-    chain_mode: 'both', 'H', or 'L'
+    chain_mode: 'HL', 'H', or 'L'
     """
     n = len(structure_list)
     rmsd_matrix = np.zeros((n, n))
-
     new_antibodies = structure_list
 
     # check data_dir and see if 
@@ -104,35 +104,25 @@ def compute_rmsd_matrix(data_dir, structure_list, chain_mode='both', epitope_sel
             else:
                 # get list of new antibodies
                 new_antibodies = list(set(structure_list) - set(old_structure_list))
-        
-    for i in range(n):
-        for j in range(i+1, n):
-            print(i, j)
-            # Validate chain_mode
-            if chain_mode not in ['both', 'H', 'L']:
-                raise ValueError(f"Invalid chain_mode: {chain_mode}")
-                
-            # Compute RMSD based on chain mode
-            chain_type = 'HL' if chain_mode == 'both' else chain_mode
+    
+    if chain_mode not in ['HL', 'H', 'L']:
+        raise ValueError(f"Invalid chain_mode: {chain_mode}")
 
-            # if structure_list[i] or structure_list[j] in new_antibodies, compute rmsd, else use old rmsd
-            if structure_list[i] in new_antibodies or structure_list[j] in new_antibodies:
-                rmsd = compute_rmsd_single(
-                    structure_list[i],
-                    structure_list[j], 
-                    chain_type,
-                    epitope_selection
-                )
-            else:
-                print('found old rmsd')
-                # get index values of structure_list[i] and structure_list[j] in old_structure_list
-                old_i = old_structure_list.index(structure_list[i])
-                old_j = old_structure_list.index(structure_list[j])
-                rmsd = old_rmsd_matrix[old_i, old_j]
-            
-            # Fill both sides of symmetric matrix
-            rmsd_matrix[i,j] = rmsd
-            rmsd_matrix[j,i] = rmsd
+    def compute_pairwise_rmsd(i, j):
+        chain_type = chain_mode
+        if structure_list[i] in new_antibodies or structure_list[j] in new_antibodies:
+            return (i, j, compute_rmsd_single(structure_list[i], structure_list[j], chain_type, epitope_selection))
+        else:
+            old_i = old_structure_list.index(structure_list[i])
+            old_j = old_structure_list.index(structure_list[j])
+            return (i, j, old_rmsd_matrix[old_i, old_j])
+
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(compute_pairwise_rmsd, i, j) for i in range(n) for j in range(i+1, n)]
+        for future in as_completed(futures):
+            i, j, rmsd = future.result()
+            rmsd_matrix[i, j] = rmsd
+            rmsd_matrix[j, i] = rmsd
             
     return rmsd_matrix
 

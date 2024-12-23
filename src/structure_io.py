@@ -40,7 +40,10 @@ def create_chain_selection(object_name, chain_id, sel_name=None, backbone_only=T
     sel_name = sanitize_name(sel_name)
     object_name = sanitize_name(object_name)
     
-    selection = f"(m. {object_name} & c. {chain_id})"
+    if chain_id == 'HL':
+        selection = f"(m. {object_name} & c. H+L)"
+    else:
+        selection = f"(m. {object_name} & c. {chain_id})"
 
     if backbone_only:
         selection += " & n. CA+C+N+O"

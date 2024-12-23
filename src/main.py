@@ -43,7 +43,9 @@ def main():
     # we'll use a temporary epitope selection until i bring in the freesasa information
     epitope_selection = 'c. B and i. 512-519'
 
+    rmsd_matrices = []
     for aligntype in ['H', 'L', 'HL']:
+        print(f"Computing RMSD matrix for {aligntype} chains")
         rmsd_matrix = compute_rmsd_matrix(data_dir, structure_names, chain_mode=aligntype, epitope_selection=epitope_selection)
         
         # save as a csv where row names and column names are the structure names
@@ -56,8 +58,9 @@ def main():
             json.dump(metadata, f)
 
         # save numpy array
-        np.save(Path(data_dir, f"rmsd_matrix_{aligntype}.npy"), rmsd_matrix_H)
+        np.save(Path(data_dir, f"rmsd_matrix_{aligntype}.npy"), rmsd_matrix)
 
+        rmsd_matrices.append(rmsd_matrix)
 
 
 
