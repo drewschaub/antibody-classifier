@@ -1,0 +1,1 @@
+# structure_io.py: Routines to initialize PyMOL, load structures (including .pdb.gz), manage selections.
