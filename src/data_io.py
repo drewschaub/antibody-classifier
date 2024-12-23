@@ -27,10 +27,10 @@ def load_structure(structure_path, object_name=None):
     except Exception as e:
         print(f"Error loading {structure_path}: {e}")
 
-def create_chain_selection(structure_name, chain_id, sel_name=None):
+def create_chain_selection(structure_name, chain_id, sel_name=None, backbone_only=True):
     """
     Create a PyMOL selection for a given chain.
-    e.g. create_chain_selection('myStruct', 'H', 'myStruct_H_noH')
+    e.g. create_chain_selection('myStruct', 'H', 'myStruct_H')
     """
     if sel_name is None:
         sel_name = f"{structure_name}_{chain_id}_sel"

@@ -29,7 +29,7 @@ def load_structure(structure_path, object_name=None):
         print(f"Error loading {structure_path}: {e}")
         return None
 
-def create_chain_selection(object_name, chain_id, sel_name=None):
+def create_chain_selection(object_name, chain_id, sel_name=None, backbone_only=True):
     """
     Create a PyMOL selection for a given chain.
     Sanitize names for PyMOL compatibility.
@@ -41,6 +41,9 @@ def create_chain_selection(object_name, chain_id, sel_name=None):
     object_name = sanitize_name(object_name)
     
     selection = f"(m. {object_name} & c. {chain_id})"
+
+    if backbone_only:
+        selection += " & n. CA+C+N+O"
     
     try:
         cmd.select(sel_name, selection)
