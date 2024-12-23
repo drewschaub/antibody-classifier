@@ -130,3 +130,6 @@ dmypy.json
 
 # pymol sessions
 *.pse
+
+# macos
+.DS_Store
