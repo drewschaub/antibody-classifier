@@ -17,7 +17,9 @@ def load_structure(structure_path, object_name=None):
     """
     structure_path = Path(structure_path)
     if object_name is None:
+        # object_name should not contain '.pdb.gz' or '.pdb'
         object_name = structure_path.stem
+        object_name = object_name.replace('.pdb', '').replace('.pdb.gz', '')
     
     try:
         cmd.load(structure_path.as_posix(), object_name)
@@ -34,5 +36,5 @@ def create_chain_selection(structure_name, chain_id, sel_name=None):
         sel_name = f"{structure_name}_{chain_id}_sel"
     selection = f"(m. {structure_name} & c. {chain_id})"
     cmd.select(sel_name, selection)
-    print(f"Selection {sel_name} created: {selection}")
+    print(f"Selection {sel_name} defined as: {selection}")
     return sel_name

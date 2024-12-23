@@ -43,3 +43,7 @@ Antibody Analysis Workflow
 	
 			parse_paratope_bsa.py
       
+
+# Curating Datasets
+
+Store your pdb files in `pdb.gz` format in the `data` folder. You can separate projects. To match with the manuscript this has folders for `hiv1`, `influenza` and `sarscov2`. To gzip on MacOS simply copy your `pdb` files to your folder and run `gzip *.pdb`. It will automatically compress to `pdb.gz` and remove the orignal `pdb` files. These are usually ~20% of the original size. 
